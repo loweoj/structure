@@ -1,7 +1,13 @@
 const serialize = require('./serialize');
 
-module.exports = {
+module.exports = WrapperClass => ({
   value: function toJSON() {
-    return serialize(this);
+    const serialized = serialize(this);
+
+    if (WrapperClass.toJSON) {
+      return WrapperClass.toJSON(serialized);
+    }
+
+    return serialized;
   }
-};
+});

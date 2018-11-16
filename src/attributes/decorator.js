@@ -52,7 +52,7 @@ function attributesDecorator(schema, schemaOptions = {}) {
 
     define(WrapperClass.prototype, 'validate', Validation.descriptorFor(schema));
 
-    define(WrapperClass.prototype, 'toJSON', Serialization.descriptor);
+    define(WrapperClass.prototype, 'toJSON', Serialization.descriptor(WrapperClass));
 
     return WrapperClass;
   };

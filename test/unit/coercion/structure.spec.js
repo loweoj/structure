@@ -33,6 +33,30 @@ describe('type coercion', () => {
       expect(user.location).to.be.undefined;
     });
 
+    it(
+      'uses needsCoercion defined on type descriptor to determine how to check for coercion',
+      () => {
+        class Friend {
+          constructor(name) {
+            this.name = name;
+          }
+        }
+
+        User = attributes({
+          friend: {
+            type: Friend,
+            needsCoercion: () => false
+          }
+        })(class User {});
+
+        const user = new User({
+          friend: 'john'
+        });
+
+        expect(user.friend).to.equal('john');
+      }
+    );
+
     it('instantiates class with raw value', () => {
       const user = new User({
         location: { x: 1, y: 2}

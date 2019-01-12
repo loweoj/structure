@@ -1,3 +1,4 @@
+const { isFunction } = require('lodash');
 const getType = require('../typeResolver');
 
 module.exports = function genericCoercionFor(typeDescriptor) {
@@ -8,7 +9,7 @@ module.exports = function genericCoercionFor(typeDescriptor) {
 
     const type = getType(typeDescriptor);
 
-    if(!needsCoercion(value, type)) {
+    if (!needsCoercion(value, type, typeDescriptor)) {
       return value;
     }
 
@@ -16,6 +17,10 @@ module.exports = function genericCoercionFor(typeDescriptor) {
   };
 };
 
-function needsCoercion(value, type) {
+function needsCoercion(value, type, typeDescriptor) {
+  if (typeDescriptor && isFunction(typeDescriptor.needsCoercion)) {
+    return typeDescriptor.needsCoercion(value);
+  }
+
   return !(value instanceof type);
 }

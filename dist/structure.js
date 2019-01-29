@@ -142,7 +142,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    define(WrapperClass.prototype, 'validate', Validation.descriptorFor(schema));
 
-	    define(WrapperClass.prototype, 'toJSON', Serialization.descriptor);
+	    define(WrapperClass.prototype, 'toJSON', Serialization.descriptor(WrapperClass));
 
 	    return WrapperClass;
 	  };
@@ -862,6 +862,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var _require = __webpack_require__(10),
+	    isFunction = _require.isFunction;
+
 	var getType = __webpack_require__(22);
 
 	module.exports = function genericCoercionFor(typeDescriptor) {
@@ -872,7 +875,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    var type = getType(typeDescriptor);
 
-	    if (!needsCoercion(value, type)) {
+	    if (!needsCoercion(value, type, typeDescriptor)) {
 	      return value;
 	    }
 
@@ -880,7 +883,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	};
 
-	function needsCoercion(value, type) {
+	function needsCoercion(value, type, typeDescriptor) {
+	  if (typeDescriptor && isFunction(typeDescriptor.needsCoercion)) {
+	    return typeDescriptor.needsCoercion(value);
+	  }
+
 	  return !(value instanceof type);
 	}
 
@@ -961,10 +968,18 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var serialize = __webpack_require__(29);
 
-	module.exports = {
-	  value: function toJSON() {
-	    return serialize(this);
-	  }
+	module.exports = function (WrapperClass) {
+	  return {
+	    value: function toJSON() {
+	      var serialized = serialize(this);
+
+	      if (WrapperClass.toJSON) {
+	        return WrapperClass.toJSON(serialized);
+	      }
+
+	      return serialized;
+	    }
+	  };
 	};
 
 /***/ }),
@@ -978,14 +993,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var getType = __webpack_require__(22);
 
-	function serialize(structure) {
+	function serialize(structure, WrapperClass) {
 	  if (structure === undefined) {
 	    return;
 	  }
 
 	  var schema = structure[SCHEMA];
 
-	  return serializeStructure(structure, schema);
+	  return serializeStructure(structure, schema, WrapperClass);
 	}
 
 	function getTypeSchema(typeDescriptor) {
@@ -1012,7 +1027,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  if (isNestedSchema(schema, attrName)) {
-	    return serialize(attribute);
+	    return attribute.toJSON();
 	  }
 
 	  return attribute;

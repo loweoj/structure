@@ -1,14 +1,14 @@
 const { SCHEMA } = require('../symbols');
 const getType = require('../typeResolver');
 
-function serialize(structure) {
+function serialize(structure, WrapperClass) {
   if(structure === undefined) {
     return;
   }
 
   const schema = structure[SCHEMA];
 
-  return serializeStructure(structure, schema);
+  return serializeStructure(structure, schema, WrapperClass);
 }
 
 function getTypeSchema(typeDescriptor) {
@@ -35,7 +35,7 @@ function serializeAttribute(attribute, attrName, schema) {
   }
 
   if(isNestedSchema(schema, attrName)) {
-    return serialize(attribute);
+    return attribute.toJSON();
   }
 
   return attribute;

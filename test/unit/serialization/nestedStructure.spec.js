@@ -149,5 +149,43 @@ describe('serialization', () => {
         });
       });
     });
+
+    context('when nested structure has a static toJSON method', () => {
+      it('should call the toJSON method of the nested attribute', () => {
+        var Book = attributes({
+          title: String,
+        })(class Book {
+          static toJSON(json) {
+            json.isbn = '123456789';
+            return json;
+          }
+        });
+
+        var User = attributes({
+          name: String,
+          age: Number,
+          favouriteBook: Book
+        })(class User {});
+
+        const aBook = new Book({
+          title: 'aBook'
+        });
+
+        const user = new User({
+          name: 'Something',
+          age: 42,
+          favouriteBook: aBook
+        });
+
+        expect(user.toJSON()).to.eql({
+          name: 'Something',
+          age: 42,
+          favouriteBook: {
+            title: 'aBook',
+            isbn: '123456789'
+          }
+        });
+      });
+    });
   });
 });

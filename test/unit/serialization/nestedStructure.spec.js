@@ -151,7 +151,7 @@ describe('serialization', () => {
     });
 
     context('when nested structure has a static toJSON method', () => {
-      it('should call the toJSON method of the nested attribute', () => {
+      it('should call the toJSON method of nested array types', () => {
         var Book = attributes({
           title: String,
         })(class Book {
@@ -164,26 +164,41 @@ describe('serialization', () => {
         var User = attributes({
           name: String,
           age: Number,
-          favouriteBook: Book
-        })(class User {});
+          favouriteBooks: {
+            type: Array,
+            itemType: Book
+          }
+        })(class User {
+          static toJSON(json) {
+            json.name = 'Hello ' + json.name;
+            return json;
+          }
+        });
 
         const aBook = new Book({
           title: 'aBook'
         });
 
+        const bBook = new Book({
+          title: 'bBook'
+        });
+
         const user = new User({
           name: 'Something',
           age: 42,
-          favouriteBook: aBook
+          favouriteBooks: [aBook, bBook]
         });
 
         expect(user.toJSON()).to.eql({
-          name: 'Something',
+          name: 'Hello Something',
           age: 42,
-          favouriteBook: {
+          favouriteBooks: [{
             title: 'aBook',
-            isbn: '123456789'
-          }
+            isbn: '123456789',
+          }, {
+            title: 'bBook',
+            isbn: '123456789',
+          }]
         });
       });
     });

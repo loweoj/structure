@@ -1023,7 +1023,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function serializeAttribute(attribute, attrName, schema) {
 	  if (isArrayType(schema, attrName)) {
-	    return attribute.map(serialize);
+	    return attribute.map(function (item) {
+	      if (item && typeof item.toJSON === 'function') {
+	        return item.toJSON();
+	      }
+	      return serialize(item);
+	    });
 	  }
 
 	  if (isNestedSchema(schema, attrName)) {

@@ -753,23 +753,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	function getCoercion(typeDescriptor) {
-	  return types.find(function (c) {
+	  var coercion = types.find(function (c) {
 	    return c.type === typeDescriptor.type;
 	  });
 	}
 
-	function createCoercionFunction(coercion, typeDescriptor) {
-	  if (!coercion) {
-	    return genericCoercionFor(typeDescriptor);
+	  if (coercion) {
+	    return coercion;
 	  }
 
+	  return genericCoercionFor;
+	}
+
+	function createCoercionFunction(coercion, typeDescriptor) {
 	  return function coerce(value) {
 	    if (value === undefined) {
 	      return;
 	    }
 
-	    if (needsCoercion(value, coercion)) {
-	      return coercion.coerce(value);
+	    if (!coercion.isCoerced(value, typeDescriptor)) {
+	      return coercion.coerce(value, typeDescriptor);
 	    }
 
 	    return value;
@@ -842,7 +845,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return itemTypeDescriptor.coerce(item);
 	}
 
-/***/ }),
+/***/ },
 /* 22 */
 /***/ (function(module, exports) {
 
@@ -867,20 +870,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var getType = __webpack_require__(22);
 
-	module.exports = function genericCoercionFor(typeDescriptor) {
-	  return function coerce(value) {
-	    if (value === undefined) {
-	      return;
-	    }
-
+	module.exports = {
+	  isCoerced: function isCoerced(value, typeDescriptor) {
+	    return value instanceof getType(typeDescriptor);
+	  },
+	  coerce: function coerce(value, typeDescriptor) {
 	    var type = getType(typeDescriptor);
 
-	    if (!needsCoercion(value, type, typeDescriptor)) {
-	      return value;
-	    }
-
 	    return new type(value);
-	  };
+	  }
 	};
 
 	function needsCoercion(value, type, typeDescriptor) {
@@ -902,7 +900,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 	  type: String,
-	  test: isString,
+	  isCoerced: isString,
 	  coerce: function coerce(value) {
 	    if (value === null) {
 	      return '';
@@ -923,7 +921,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 	  type: Number,
-	  test: isNumber,
+	  isCoerced: isNumber,
 	  coerce: function coerce(value) {
 	    if (value === null) {
 	      return 0;
@@ -935,7 +933,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 26 */
-/***/ (function(module, exports, __webpack_require__) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -944,7 +942,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = {
 	  type: Boolean,
-	  test: isBoolean,
+	  isCoerced: isBoolean,
 	  coerce: function coerce(value) {
 	    return Boolean(value);
 	  }
@@ -1000,7 +998,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var schema = structure[SCHEMA];
 
-	  return serializeStructure(structure, schema, WrapperClass);
+	  return serializeStructure(structure, schema);
 	}
 
 	function getTypeSchema(typeDescriptor) {
@@ -1023,16 +1021,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function serializeAttribute(attribute, attrName, schema) {
 	  if (isArrayType(schema, attrName)) {
-	    return attribute.map(function (item) {
-	      if (item && typeof item.toJSON === 'function') {
-	        return item.toJSON();
-	      }
-	      return serialize(item);
-	    });
+	    return attribute.map(serialize);
 	  }
 
 	  if (isNestedSchema(schema, attrName)) {
-	    return attribute.toJSON();
+	    return serialize(attribute);
 	  }
 
 	  return attribute;
@@ -1076,18 +1069,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 	function initialize(attributes, schema, instance) {
-	  instance.attributes = initializeWith(nativesInitializer, attributes, schema, instance);
-	  instance.attributes = initializeWith(derivedInitializer, attributes, schema, instance);
+	  var initializedAttributes = {};
 
-	  return attributes;
+	  initializedAttributes = initializeWith(nativesInitializer, attributes, schema, initializedAttributes);
+	  initializedAttributes = initializeWith(derivedInitializer, attributes, schema, initializedAttributes);
+
+	  return instance.attributes = initializedAttributes;
 	}
 
-	function initializeWith(Initializer, attributes, schema, instance) {
+	function initializeWith(initializer, attributes, schema, initializedAttributes) {
 	  for (var attrName in schema) {
 	    var value = attributes[attrName];
 
-	    if (value === undefined && Initializer.shouldInitialize(schema[attrName])) {
-	      attributes[attrName] = Initializer.getValue(schema[attrName], instance);
+	    if (value !== undefined) {
+	      continue;
+	    }
+
+	    if (initializer.shouldInitialize(schema[attrName])) {
+	      attributes[attrName] = initializer.getValue(schema[attrName], initializedAttributes);
 	    }
 	  }
 
@@ -1152,7 +1151,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return attributes;
 	}
 
-/***/ })
+/***/ }
 /******/ ])
 });
 ;

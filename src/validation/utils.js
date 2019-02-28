@@ -1,22 +1,31 @@
 const joi = require('joi');
-const { isPlainObject } = require('lodash');
+const { isPlainObject, isFunction } = require('lodash');
 
 const notRequired = ({ optionName, typeDescriptor }) =>
   optionName === 'required' && typeDescriptor[optionName] === false;
 
 exports.mapToJoi = function mapToJoi(typeDescriptor, { initial, mappings }) {
-  return mappings.reduce((joiSchema, [optionName, joiMethod, passValueToJoi]) => {
-    if (typeDescriptor[optionName] === undefined || notRequired({ optionName, typeDescriptor})) {
+  let joiSchema = mappings.reduce((joiSchema, [optionName, joiMethod, passValueToJoi]) => {
+    const attributeDescriptor = typeDescriptor[optionName];
+    if(attributeDescriptor === undefined) {
       return joiSchema;
     }
 
-    if(passValueToJoi) {
-      return joiSchema[joiMethod](typeDescriptor[optionName]);
+    if(shouldPassValueToJoi(passValueToJoi, attributeDescriptor)) {
+      return joiSchema[joiMethod](attributeDescriptor);
     }
 
     return joiSchema[joiMethod]();
   }, initial);
+
+  joiSchema = requiredOption(typeDescriptor, { initial: joiSchema });
+
+  return joiSchema;
 };
+
+function shouldPassValueToJoi(passValueToJoi, attributeDescriptor) {
+  return passValueToJoi && (!isFunction(passValueToJoi) || passValueToJoi(attributeDescriptor));
+}
 
 function mapValueOrReference(valueOrReference) {
   if(isPlainObject(valueOrReference)) {
@@ -28,15 +37,15 @@ function mapValueOrReference(valueOrReference) {
 
 exports.mapToJoiWithReference = function mapToJoiWithReference(typeDescriptor, { initial, mappings }) {
   return mappings.reduce((joiSchema, [optionName, joiMethod]) => {
-    var optionValue = typeDescriptor[optionName];
+    var attributeDescriptor = typeDescriptor[optionName];
 
-    if(optionValue === undefined) {
+    if(attributeDescriptor === undefined) {
       return joiSchema;
     }
 
-    optionValue = mapValueOrReference(optionValue);
+    attributeDescriptor = mapValueOrReference(attributeDescriptor);
 
-    return joiSchema[joiMethod](optionValue);
+    return joiSchema[joiMethod](attributeDescriptor);
   }, initial);
 };
 
@@ -56,10 +65,12 @@ exports.equalOption = function equalOption(typeDescriptor, { initial }) {
   return initial.equal(possibilities);
 };
 
-exports.requiredOption = function requiredOption(typeDescriptor, { initial }) {
+function requiredOption(typeDescriptor, { initial }) {
   if(typeDescriptor.required) {
     return initial.required();
   }
 
   return initial;
-};
+}
+
+exports.requiredOption = requiredOption;

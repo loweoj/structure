@@ -7,7 +7,7 @@
 		exports["Structure"] = factory(require("joi"), require("lodash"));
 	else
 		root["Structure"] = factory(root["joi"], root["_"]);
-})(this, function(__WEBPACK_EXTERNAL_MODULE_7__, __WEBPACK_EXTERNAL_MODULE_10__) {
+})(this, function(__WEBPACK_EXTERNAL_MODULE_7__, __WEBPACK_EXTERNAL_MODULE_9__) {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -84,16 +84,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 	var Schema = __webpack_require__(4);
-	var Serialization = __webpack_require__(27);
+	var Serialization = __webpack_require__(29);
 	var Validation = __webpack_require__(6);
 	var Errors = __webpack_require__(19);
 
 	var _require = __webpack_require__(15),
 	    SCHEMA = _require.SCHEMA;
 
-	var Initializer = __webpack_require__(30);
+	var Initializer = __webpack_require__(32);
 
-	var _require2 = __webpack_require__(31),
+	var _require2 = __webpack_require__(33),
 	    attributeDescriptorFor = _require2.attributeDescriptorFor,
 	    attributesDescriptorFor = _require2.attributesDescriptorFor;
 
@@ -110,7 +110,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    var WrapperClass = new Proxy(Class, {
 	      construct: function construct(target, constructorArgs, newTarget) {
 	        var instance = Reflect.construct(target, constructorArgs, newTarget);
-	        var passedAttributes = constructorArgs[0] || {};
+	        var passedAttributes = Object.assign({}, constructorArgs[0]);
 
 	        Initializer.initialize(passedAttributes, schema, instance);
 
@@ -276,12 +276,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	var joi = __webpack_require__(7);
 
 	var _require = __webpack_require__(9),
-	    mapToJoi = _require.mapToJoi,
-	    equalOption = _require.equalOption;
+	    isPlainObject = _require.isPlainObject;
+
+	var _require2 = __webpack_require__(10),
+	    mapToJoi = _require2.mapToJoi,
+	    equalOption = _require2.equalOption;
 
 	module.exports = {
 	  type: String,
-	  joiMappings: [['minLength', 'min', true], ['maxLength', 'max', true], ['exactLength', 'length', true], ['regex', 'regex', true], ['alphanumeric', 'alphanum'], ['lowerCase', 'lowercase'], ['upperCase', 'uppercase'], ['email', 'email'], ['required', 'required']],
+	  joiMappings: [['minLength', 'min', true], ['maxLength', 'max', true], ['exactLength', 'length', true], ['regex', 'regex', true], ['alphanumeric', 'alphanum'], ['lowerCase', 'lowercase'], ['upperCase', 'uppercase'], ['email', 'email'], ['guid', 'guid', isPlainObject]],
 	  createJoiSchema: function createJoiSchema(typeDescriptor) {
 	    var joiSchema = joi.string();
 
@@ -297,6 +300,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 9 */
+/***/ (function(module, exports) {
+
+	module.exports = __WEBPACK_EXTERNAL_MODULE_9__;
+
+/***/ }),
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -305,8 +314,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var joi = __webpack_require__(7);
 
-	var _require = __webpack_require__(10),
-	    isPlainObject = _require.isPlainObject;
+	var _require = __webpack_require__(9),
+	    isPlainObject = _require.isPlainObject,
+	    isFunction = _require.isFunction;
 
 	var notRequired = function notRequired(_ref) {
 	  var optionName = _ref.optionName,
@@ -318,23 +328,32 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var initial = _ref2.initial,
 	      mappings = _ref2.mappings;
 
-	  return mappings.reduce(function (joiSchema, _ref3) {
+	  var joiSchema = mappings.reduce(function (joiSchema, _ref3) {
 	    var _ref4 = _slicedToArray(_ref3, 3),
 	        optionName = _ref4[0],
 	        joiMethod = _ref4[1],
 	        passValueToJoi = _ref4[2];
 
-	    if (typeDescriptor[optionName] === undefined || notRequired({ optionName: optionName, typeDescriptor: typeDescriptor })) {
+	    var attributeDescriptor = typeDescriptor[optionName];
+	    if (attributeDescriptor === undefined) {
 	      return joiSchema;
 	    }
 
-	    if (passValueToJoi) {
-	      return joiSchema[joiMethod](typeDescriptor[optionName]);
+	    if (shouldPassValueToJoi(passValueToJoi, attributeDescriptor)) {
+	      return joiSchema[joiMethod](attributeDescriptor);
 	    }
 
 	    return joiSchema[joiMethod]();
 	  }, initial);
+
+	  joiSchema = requiredOption(typeDescriptor, { initial: joiSchema });
+
+	  return joiSchema;
 	};
+
+	function shouldPassValueToJoi(passValueToJoi, attributeDescriptor) {
+	  return passValueToJoi && (!isFunction(passValueToJoi) || passValueToJoi(attributeDescriptor));
+	}
 
 	function mapValueOrReference(valueOrReference) {
 	  if (isPlainObject(valueOrReference)) {
@@ -353,15 +372,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	        optionName = _ref7[0],
 	        joiMethod = _ref7[1];
 
-	    var optionValue = typeDescriptor[optionName];
+	    var attributeDescriptor = typeDescriptor[optionName];
 
-	    if (optionValue === undefined) {
+	    if (attributeDescriptor === undefined) {
 	      return joiSchema;
 	    }
 
-	    optionValue = mapValueOrReference(optionValue);
+	    attributeDescriptor = mapValueOrReference(attributeDescriptor);
 
-	    return joiSchema[joiMethod](optionValue);
+	    return joiSchema[joiMethod](attributeDescriptor);
 	  }, initial);
 	};
 
@@ -383,7 +402,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return initial.equal(possibilities);
 	};
 
-	exports.requiredOption = function requiredOption(typeDescriptor, _ref9) {
+	function requiredOption(typeDescriptor, _ref9) {
 	  var initial = _ref9.initial;
 
 	  if (typeDescriptor.required) {
@@ -391,13 +410,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }
 
 	  return initial;
-	};
+	}
 
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-	module.exports = __WEBPACK_EXTERNAL_MODULE_10__;
+	exports.requiredOption = requiredOption;
 
 /***/ }),
 /* 11 */
@@ -407,14 +422,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var joi = __webpack_require__(7);
 
-	var _require = __webpack_require__(9),
+	var _require = __webpack_require__(10),
 	    mapToJoi = _require.mapToJoi,
 	    mapToJoiWithReference = _require.mapToJoiWithReference,
 	    equalOption = _require.equalOption;
 
 	module.exports = {
 	  type: Number,
-	  joiMappings: [['integer', 'integer'], ['precision', 'precision', true], ['multiple', 'multiple', true], ['positive', 'positive', true], ['negative', 'negative', true], ['required', 'required']],
+	  joiMappings: [['integer', 'integer'], ['precision', 'precision', true], ['multiple', 'multiple', true], ['positive', 'positive', true], ['negative', 'negative', true]],
 	  valueOrRefOptions: [['min', 'min'], ['greater', 'greater'], ['max', 'max'], ['less', 'less']],
 	  createJoiSchema: function createJoiSchema(typeDescriptor) {
 	    var joiSchema = mapToJoiWithReference(typeDescriptor, {
@@ -436,13 +451,13 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var joi = __webpack_require__(7);
 
-	var _require = __webpack_require__(9),
+	var _require = __webpack_require__(10),
 	    mapToJoi = _require.mapToJoi,
 	    equalOption = _require.equalOption;
 
 	module.exports = {
 	  type: Boolean,
-	  joiMappings: [['required', 'required']],
+	  joiMappings: [],
 	  createJoiSchema: function createJoiSchema(typeDescriptor) {
 	    var joiSchema = joi.boolean();
 
@@ -460,14 +475,14 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var joi = __webpack_require__(7);
 
-	var _require = __webpack_require__(9),
+	var _require = __webpack_require__(10),
 	    mapToJoi = _require.mapToJoi,
 	    mapToJoiWithReference = _require.mapToJoiWithReference,
 	    equalOption = _require.equalOption;
 
 	module.exports = {
 	  type: Date,
-	  joiMappings: [['required', 'required']],
+	  joiMappings: [],
 	  valueOrRefOptions: [['min', 'min'], ['max', 'max']],
 	  createJoiSchema: function createJoiSchema(typeDescriptor) {
 	    var joiSchema = mapToJoiWithReference(typeDescriptor, {
@@ -492,7 +507,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _require = __webpack_require__(15),
 	    SCHEMA = _require.SCHEMA;
 
-	var _require2 = __webpack_require__(9),
+	var _require2 = __webpack_require__(10),
 	    requiredOption = _require2.requiredOption;
 
 	module.exports = function nestedValidation(typeDescriptor) {
@@ -559,10 +574,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var joi = __webpack_require__(7);
 
-	var _require = __webpack_require__(9),
+	var _require = __webpack_require__(10),
 	    mapToJoi = _require.mapToJoi;
 
-	var joiMappings = [['required', 'required'], ['minLength', 'min', true], ['maxLength', 'max', true], ['exactLength', 'length', true]];
+	var joiMappings = [['minLength', 'min', true], ['maxLength', 'max', true], ['exactLength', 'length', true]];
 
 	module.exports = function arrayValidation(typeDescriptor, itemTypeDescriptor) {
 	  var joiSchema = joi.array().items(itemTypeDescriptor.validation);
@@ -630,7 +645,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
+	var _require = __webpack_require__(9),
 	    isObject = _require.isObject,
 	    isFunction = _require.isFunction,
 	    isString = _require.isString;
@@ -739,8 +754,9 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	var arrayCoercionFor = __webpack_require__(21);
 	var genericCoercionFor = __webpack_require__(23);
+	var Coercion = __webpack_require__(24);
 
-	var types = [__webpack_require__(24), __webpack_require__(25), __webpack_require__(26)];
+	var types = [__webpack_require__(25), __webpack_require__(26), __webpack_require__(27), __webpack_require__(28)];
 
 	exports.for = function coercionFor(typeDescriptor, itemTypeDescriptor) {
 	  if (itemTypeDescriptor) {
@@ -749,35 +765,19 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var coercion = getCoercion(typeDescriptor);
 
-	  return createCoercionFunction(coercion, typeDescriptor);
+	  return Coercion.execute(coercion, typeDescriptor);
 	};
 
 	function getCoercion(typeDescriptor) {
-	  return types.find(function (c) {
+	  var coercion = types.find(function (c) {
 	    return c.type === typeDescriptor.type;
 	  });
-	}
 
-	function createCoercionFunction(coercion, typeDescriptor) {
-	  if (!coercion) {
-	    return genericCoercionFor(typeDescriptor);
+	  if (coercion) {
+	    return coercion;
 	  }
 
-	  return function coerce(value) {
-	    if (value === undefined) {
-	      return;
-	    }
-
-	    if (needsCoercion(value, coercion)) {
-	      return coercion.coerce(value);
-	    }
-
-	    return value;
-	  };
-	}
-
-	function needsCoercion(value, coercion) {
-	  return !coercion.test(value);
+	  return genericCoercionFor;
 	}
 
 /***/ }),
@@ -862,34 +862,21 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
+	var _require = __webpack_require__(9),
 	    isFunction = _require.isFunction;
 
 	var getType = __webpack_require__(22);
 
-	module.exports = function genericCoercionFor(typeDescriptor) {
-	  return function coerce(value) {
-	    if (value === undefined) {
-	      return;
-	    }
-
+	module.exports = {
+	  isCoerced: function isCoerced(value, typeDescriptor) {
+	    return value instanceof getType(typeDescriptor);
+	  },
+	  coerce: function coerce(value, typeDescriptor) {
 	    var type = getType(typeDescriptor);
 
-	    if (!needsCoercion(value, type, typeDescriptor)) {
-	      return value;
-	    }
-
 	    return new type(value);
-	  };
-	};
-
-	function needsCoercion(value, type, typeDescriptor) {
-	  if (typeDescriptor && isFunction(typeDescriptor.needsCoercion)) {
-	    return typeDescriptor.needsCoercion(value);
 	  }
-
-	  return !(value instanceof type);
-	}
+	};
 
 /***/ }),
 /* 24 */
@@ -897,20 +884,29 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
-	    isString = _require.isString;
+	var _require = __webpack_require__(9),
+	    isFunction = _require.isFunction,
+	    curryRight = _require.curryRight;
 
-	module.exports = {
-	  type: String,
-	  test: isString,
-	  coerce: function coerce(value) {
-	    if (value === null) {
-	      return '';
-	    }
-
-	    return String(value);
+	exports.execute = curryRight(function (value, coercion, typeDescriptor) {
+	  if (value === undefined) {
+	    return;
 	  }
-	};
+
+	  if (value === null) {
+	    return getDefaultValue(coercion);
+	  }
+
+	  if (coercion.isCoerced(value, typeDescriptor)) {
+	    return value;
+	  }
+
+	  return coercion.coerce(value, typeDescriptor);
+	});
+
+	function getDefaultValue(coercion) {
+	  return isFunction(coercion.default) ? coercion.default() : coercion.default;
+	}
 
 /***/ }),
 /* 25 */
@@ -918,18 +914,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
-	    isNumber = _require.isNumber;
+	var _require = __webpack_require__(9),
+	    isString = _require.isString;
 
 	module.exports = {
-	  type: Number,
-	  test: isNumber,
+	  type: String,
+	  isCoerced: isString,
+	  default: '',
 	  coerce: function coerce(value) {
-	    if (value === null) {
-	      return 0;
-	    }
-
-	    return Number(value);
+	    return this.type(value);
 	  }
 	};
 
@@ -939,14 +932,15 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
-	    isBoolean = _require.isBoolean;
+	var _require = __webpack_require__(9),
+	    isNumber = _require.isNumber;
 
 	module.exports = {
-	  type: Boolean,
-	  test: isBoolean,
+	  type: Number,
+	  isCoerced: isNumber,
+	  default: 0,
 	  coerce: function coerce(value) {
-	    return Boolean(value);
+	    return this.type(value);
 	  }
 	};
 
@@ -956,8 +950,16 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
+	var _require = __webpack_require__(9),
+	    isBoolean = _require.isBoolean;
+
 	module.exports = {
-	  descriptor: __webpack_require__(28)
+	  type: Boolean,
+	  isCoerced: isBoolean,
+	  default: false,
+	  coerce: function coerce(value) {
+	    return this.type(value);
+	  }
 	};
 
 /***/ }),
@@ -966,7 +968,37 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var serialize = __webpack_require__(29);
+	var _require = __webpack_require__(9),
+	    isDate = _require.isDate;
+
+	module.exports = {
+	  type: Date,
+	  isCoerced: isDate,
+	  default: function _default() {
+	    return new Date(null);
+	  },
+	  coerce: function coerce(value) {
+	    return new this.type(value);
+	  }
+	};
+
+/***/ }),
+/* 29 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = {
+	  descriptor: __webpack_require__(30)
+	};
+
+/***/ }),
+/* 30 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var serialize = __webpack_require__(31);
 
 	module.exports = function (WrapperClass) {
 	  return {
@@ -983,7 +1015,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 /***/ }),
-/* 29 */
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1049,12 +1081,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = serialize;
 
 /***/ }),
-/* 30 */
+/* 32 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
+	var _require = __webpack_require__(9),
 	    isFunction = _require.isFunction;
 
 	var nativesInitializer = Object.assign({}, {
@@ -1076,18 +1108,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	});
 
 	function initialize(attributes, schema, instance) {
-	  instance.attributes = initializeWith(nativesInitializer, attributes, schema, instance);
-	  instance.attributes = initializeWith(derivedInitializer, attributes, schema, instance);
+	  var initializedAttributes = {};
 
-	  return attributes;
+	  initializedAttributes = initializeWith(nativesInitializer, attributes, schema, initializedAttributes);
+	  initializedAttributes = initializeWith(derivedInitializer, attributes, schema, initializedAttributes);
+
+	  return instance.attributes = initializedAttributes;
 	}
 
-	function initializeWith(Initializer, attributes, schema, instance) {
+	function initializeWith(initializer, attributes, schema, initializedAttributes) {
 	  for (var attrName in schema) {
 	    var value = attributes[attrName];
 
-	    if (value === undefined && Initializer.shouldInitialize(schema[attrName])) {
-	      attributes[attrName] = Initializer.getValue(schema[attrName], instance);
+	    if (value !== undefined) {
+	      continue;
+	    }
+
+	    if (initializer.shouldInitialize(schema[attrName])) {
+	      attributes[attrName] = initializer.getValue(schema[attrName], initializedAttributes);
 	    }
 	  }
 
@@ -1097,12 +1135,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = { initialize: initialize, nativesInitializer: nativesInitializer, derivedInitializer: derivedInitializer };
 
 /***/ }),
-/* 31 */
+/* 33 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _require = __webpack_require__(10),
+	var _require = __webpack_require__(9),
 	    isObject = _require.isObject;
 
 	var Errors = __webpack_require__(19);

@@ -1,3 +1,11 @@
+## 1.4.0 - 2019-03-26
+Enhancements:
+* Add `nullable` option
+
+## 1.3.2 - 2019-03-22
+Fix:
+* The actual instance is passed to the dynamic defaults
+
 ## 1.3.0 - 2018-03-23
 Enhancements:
 * When using default function to initialize attributes you can now refer to another attribute values to compose value

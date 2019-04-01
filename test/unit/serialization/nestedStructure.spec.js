@@ -201,6 +201,55 @@ describe('serialization', () => {
           }]
         });
       });
+
+      it('should ignore the toJSON method of nested structures if raw: true is set', () => {
+        var Book = attributes({
+          title: String,
+        })(class Book {
+          static toJSON(json) {
+            json.isbn = '123456789';
+            return json;
+          }
+        });
+
+        var User = attributes({
+          name: String,
+          age: Number,
+          favouriteBooks: {
+            type: Array,
+            itemType: Book
+          }
+        })(class User {
+          static toJSON(json) {
+            json.name = 'Hello ' + json.name;
+            return json;
+          }
+        });
+
+        const aBook = new Book({
+          title: 'aBook'
+        });
+
+        const bBook = new Book({
+          title: 'bBook'
+        });
+
+        const user = new User({
+          name: 'Something',
+          age: 42,
+          favouriteBooks: [aBook, bBook]
+        });
+
+        expect(user.toJSON({ raw: true })).to.eql({
+          name: 'Something',
+          age: 42,
+          favouriteBooks: [{
+            title: 'aBook'
+          }, {
+            title: 'bBook'
+          }]
+        });
+      });
     });
   });
 });

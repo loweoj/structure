@@ -1,28 +1,29 @@
 const { SCHEMA } = require('../symbols');
 const getType = require('../typeResolver');
 
-function serialize(structure, WrapperClass) {
+function serialize(structure, toJSONOpts) {
   if(structure == null) {
     return structure;
   }
 
   const schema = structure[SCHEMA];
 
-  return serializeStructure(structure, schema, WrapperClass);
+  return serializeStructure(structure, schema, toJSONOpts);
 }
 
 function getTypeSchema(typeDescriptor) {
   return getType(typeDescriptor)[SCHEMA];
 }
 
-function serializeStructure(structure, schema) {
+function serializeStructure(structure, schema, toJSONOpts) {
   const serializedStructure = Object.create(null);
 
   for(let attrName in schema) {
     let attribute = structure[attrName];
 
     if(isPresent(attribute) || isNullable(attribute, schema, attrName)) {
-      serializedStructure[attrName] = serializeAttribute(attribute, attrName, schema);
+      serializedStructure[attrName] = serializeAttribute(attribute, attrName,
+        schema, toJSONOpts);
     }
   }
 
@@ -37,12 +38,13 @@ function isNullable(attribute, schema, attrName) {
   return attribute !== undefined && schema[attrName].nullable;
 }
 
-function serializeAttribute(attribute, attrName, schema) {
+function serializeAttribute(attribute, attrName, schema, toJSONOpts) {
   if(isArrayType(schema, attrName)) {
     return attribute.map(item => {
       if (item && typeof item.toJSON === 'function') {
-        return item.toJSON();
+        return item.toJSON(toJSONOpts);
       }
+
       return serialize(item);
     });
   }
@@ -52,7 +54,7 @@ function serializeAttribute(attribute, attrName, schema) {
       return attribute;
     }
 
-    return attribute.toJSON();
+    return attribute.toJSON(toJSONOpts);
   }
 
   return attribute;

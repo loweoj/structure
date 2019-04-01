@@ -154,5 +154,27 @@ describe('serialization', () => {
         someProp: true
       });
     });
+
+    it('toJSON method should accept a `raw` flag which skips the instance defined toJSON method.', () => {
+      var User = attributes({
+        name: String,
+        age: Number
+      })(class User {
+        static toJSON(json) {
+          json.someProp = true;
+          return json;
+        }
+      });
+
+      const user = new User({
+        name: 'Something',
+        age: 42
+      });
+
+      expect(user.toJSON({ raw: true })).to.eql({
+        name: 'Something',
+        age: 42,
+      });
+    });
   });
 });

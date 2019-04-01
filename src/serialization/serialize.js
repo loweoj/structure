@@ -48,6 +48,10 @@ function serializeAttribute(attribute, attrName, schema) {
   }
 
   if(isNestedSchema(schema, attrName)) {
+    if (attribute == null) {
+      return attribute;
+    }
+
     return attribute.toJSON();
   }
 

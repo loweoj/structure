@@ -1,9 +1,6 @@
 const joi = require('joi');
 const { isPlainObject, isFunction } = require('lodash');
 
-const notRequired = ({ optionName, typeDescriptor }) =>
-  optionName === 'required' && typeDescriptor[optionName] === false;
-
 exports.mapToJoi = function mapToJoi(typeDescriptor, { initial, mappings }) {
   let joiSchema = mappings.reduce((joiSchema, [optionName, joiMethod, passValueToJoi]) => {
     const attributeDescriptor = typeDescriptor[optionName];

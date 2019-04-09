@@ -218,7 +218,8 @@ describe('serialization', () => {
           favouriteBooks: {
             type: Array,
             itemType: Book
-          }
+          },
+          translatableBooks: Object
         })(class User {
           static toJSON(json) {
             json.name = 'Hello ' + json.name;
@@ -234,10 +235,17 @@ describe('serialization', () => {
           title: 'bBook'
         });
 
+        const enGBook = new Book({
+          title: 'enGBook'
+        });
+
         const user = new User({
           name: 'Something',
           age: 42,
-          favouriteBooks: [aBook, bBook]
+          favouriteBooks: [aBook, bBook],
+          translatableBooks: {
+            'en-GB': enGBook
+          }
         });
 
         expect(user.toJSON({ raw: true })).to.eql({
@@ -247,7 +255,12 @@ describe('serialization', () => {
             title: 'aBook'
           }, {
             title: 'bBook'
-          }]
+          }],
+          translatableBooks: {
+            'en-GB': {
+              title: 'enGBook'
+            }
+          }
         });
       });
     });

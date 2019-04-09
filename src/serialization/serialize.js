@@ -1,3 +1,4 @@
+const { isPlainObject } = require('lodash');
 const { SCHEMA } = require('../symbols');
 const getType = require('../typeResolver');
 
@@ -40,28 +41,55 @@ function isNullable(attribute, schema, attrName) {
 
 function serializeAttribute(attribute, attrName, schema, toJSONOpts) {
   if(isArrayType(schema, attrName)) {
-    return attribute.map(item => {
-      if (item && typeof item.toJSON === 'function') {
-        return item.toJSON(toJSONOpts);
-      }
+    return serializeArrayType(attribute, toJSONOpts);
+  }
 
-      return serialize(item);
-    });
+  if (isObjectType(attribute)) {
+    return serializeObjectType(attribute, toJSONOpts);
   }
 
   if(isNestedSchema(schema, attrName)) {
-    if (attribute == null) {
-      return attribute;
-    }
-
-    return attribute.toJSON(toJSONOpts);
+    return serializeNestedType(attribute, toJSONOpts);
   }
 
   return attribute;
 }
 
+function serializeArrayType(attribute, toJSONOpts) {
+  return attribute.map(item => {
+    if (item && typeof item.toJSON === 'function') {
+      return item.toJSON(toJSONOpts);
+    }
+
+    return serialize(item);
+  });
+}
+
+function serializeNestedType(attribute, toJSONOpts) {
+  if (attribute == null) {
+    return attribute;
+  }
+
+  return attribute.toJSON(toJSONOpts);
+}
+
+function serializeObjectType(attribute, toJSONOpts) {
+  return Object.keys(attribute).reduce((serialized, key) => {
+    const item = attribute[key];
+
+    serialized[key] = typeof item.toJSON === 'function' ?
+      item.toJSON(toJSONOpts) : serialize(item);
+
+    return serialized;
+  }, {});
+}
+
 function isArrayType(schema, attrName) {
   return schema[attrName].itemType && getTypeSchema(schema[attrName].itemType);
+}
+
+function isObjectType(attribute) {
+  return isPlainObject(attribute) && Object.values(attribute).every(value => value[SCHEMA]);
 }
 
 function isNestedSchema(schema, attrName) {

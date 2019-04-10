@@ -77,8 +77,8 @@ function serializeObjectType(attribute, toJSONOpts) {
   return Object.keys(attribute).reduce((serialized, key) => {
     const item = attribute[key];
 
-    serialized[key] = typeof item.toJSON === 'function' ?
-      item.toJSON(toJSONOpts) : serialize(item);
+    serialized[key] = item && typeof item.toJSON === 'function' ?
+      item.toJSON(toJSONOpts) : item;
 
     return serialized;
   }, {});
@@ -89,7 +89,7 @@ function isArrayType(schema, attrName) {
 }
 
 function isObjectType(attribute) {
-  return isPlainObject(attribute) && Object.values(attribute).every(value => value[SCHEMA]);
+  return isPlainObject(attribute) && Object.values(attribute).some(value => value && value[SCHEMA]);
 }
 
 function isNestedSchema(schema, attrName) {

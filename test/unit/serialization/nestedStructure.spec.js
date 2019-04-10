@@ -244,7 +244,11 @@ describe('serialization', () => {
           age: 42,
           favouriteBooks: [aBook, bBook],
           translatableBooks: {
-            'en-GB': enGBook
+            'en-GB': enGBook,
+            'fr-FR': null,
+            'de-DE': '',
+            'nl-NL': ['some', 'array'],
+            'en': { some: 'Object' }
           }
         });
 
@@ -257,6 +261,10 @@ describe('serialization', () => {
             title: 'bBook'
           }],
           translatableBooks: {
+            'fr-FR': null,
+            'de-DE': '',
+            'nl-NL': ['some', 'array'],
+            'en': { some: 'Object'},
             'en-GB': {
               title: 'enGBook'
             }

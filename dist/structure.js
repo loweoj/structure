@@ -87,14 +87,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	var Serialization = __webpack_require__(33);
 	var Validation = __webpack_require__(6);
 	var Initialization = __webpack_require__(18);
+	var StrictMode = __webpack_require__(36);
 	var Errors = __webpack_require__(23);
 
 	var _require = __webpack_require__(15),
 	    SCHEMA = _require.SCHEMA;
 
-	var _require2 = __webpack_require__(36),
+	var _require2 = __webpack_require__(38),
 	    attributeDescriptorFor = _require2.attributeDescriptorFor,
 	    attributesDescriptorFor = _require2.attributesDescriptorFor;
+
+	var Cloning = __webpack_require__(39);
 
 	var define = Object.defineProperty;
 
@@ -135,13 +138,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    define(WrapperClass.prototype, 'attributes', attributesDescriptorFor(schema));
 
-	    Object.keys(schema).forEach(function (attr) {
-	      define(WrapperClass.prototype, attr, attributeDescriptorFor(attr, schema));
-	    });
-
 	    define(WrapperClass.prototype, 'validate', Validation.descriptorFor(schema));
 
 	    define(WrapperClass.prototype, 'toJSON', Serialization.descriptor(WrapperClass));
+
+	    define(WrapperClass, 'buildStrict', StrictMode.buildStrictDescriptorFor(WrapperClass, schemaOptions));
+
+	    define(WrapperClass.prototype, 'clone', Cloning.buildCloneDescriptorFor(WrapperClass));
+
+	    Object.keys(schema).forEach(function (attr) {
+	      define(WrapperClass.prototype, attr, attributeDescriptorFor(attr, schema));
+	    });
 
 	    return WrapperClass;
 	  };
@@ -301,7 +308,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    joiSchema = equalOption(typeDescriptor, { initial: joiSchema });
 
-	    return mapToJoi(typeDescriptor, { initial: joiSchema, mappings: this.joiMappings });
+	    return mapToJoi(typeDescriptor, {
+	      initial: joiSchema,
+	      mappings: this.joiMappings
+	    });
 	  }
 	};
 
@@ -325,21 +335,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    isPlainObject = _require.isPlainObject,
 	    isFunction = _require.isFunction;
 
-	var notRequired = function notRequired(_ref) {
-	  var optionName = _ref.optionName,
-	      typeDescriptor = _ref.typeDescriptor;
-	  return optionName === 'required' && typeDescriptor[optionName] === false;
-	};
+	exports.mapToJoi = function mapToJoi(typeDescriptor, _ref) {
+	  var initial = _ref.initial,
+	      mappings = _ref.mappings;
 
-	exports.mapToJoi = function mapToJoi(typeDescriptor, _ref2) {
-	  var initial = _ref2.initial,
-	      mappings = _ref2.mappings;
-
-	  var joiSchema = mappings.reduce(function (joiSchema, _ref3) {
-	    var _ref4 = _slicedToArray(_ref3, 3),
-	        optionName = _ref4[0],
-	        joiMethod = _ref4[1],
-	        passValueToJoi = _ref4[2];
+	  var joiSchema = mappings.reduce(function (joiSchema, _ref2) {
+	    var _ref3 = _slicedToArray(_ref2, 3),
+	        optionName = _ref3[0],
+	        joiMethod = _ref3[1],
+	        passValueToJoi = _ref3[2];
 
 	    var attributeDescriptor = typeDescriptor[optionName];
 	    if (attributeDescriptor === undefined) {
@@ -370,14 +374,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return valueOrReference;
 	}
 
-	exports.mapToJoiWithReference = function mapToJoiWithReference(typeDescriptor, _ref5) {
-	  var initial = _ref5.initial,
-	      mappings = _ref5.mappings;
+	exports.mapToJoiWithReference = function mapToJoiWithReference(typeDescriptor, _ref4) {
+	  var initial = _ref4.initial,
+	      mappings = _ref4.mappings;
 
-	  return mappings.reduce(function (joiSchema, _ref6) {
-	    var _ref7 = _slicedToArray(_ref6, 2),
-	        optionName = _ref7[0],
-	        joiMethod = _ref7[1];
+	  return mappings.reduce(function (joiSchema, _ref5) {
+	    var _ref6 = _slicedToArray(_ref5, 2),
+	        optionName = _ref6[0],
+	        joiMethod = _ref6[1];
 
 	    var attributeDescriptor = typeDescriptor[optionName];
 
@@ -391,8 +395,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, initial);
 	};
 
-	exports.equalOption = function equalOption(typeDescriptor, _ref8) {
-	  var initial = _ref8.initial;
+	exports.equalOption = function equalOption(typeDescriptor, _ref7) {
+	  var initial = _ref7.initial;
 
 	  var possibilities = typeDescriptor.equal;
 
@@ -409,8 +413,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return initial.equal(possibilities);
 	};
 
-	function requiredOption(typeDescriptor, _ref9) {
-	  var initial = _ref9.initial;
+	function requiredOption(typeDescriptor, _ref8) {
+	  var initial = _ref8.initial;
 
 	  if (typeDescriptor.nullable) {
 	    initial = initial.allow(null);
@@ -450,7 +454,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    joiSchema = equalOption(typeDescriptor, { initial: joiSchema });
 
-	    return mapToJoi(typeDescriptor, { initial: joiSchema, mappings: this.joiMappings });
+	    return mapToJoi(typeDescriptor, {
+	      initial: joiSchema,
+	      mappings: this.joiMappings
+	    });
 	  }
 	};
 
@@ -474,7 +481,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    joiSchema = equalOption(typeDescriptor, { initial: joiSchema });
 
-	    return mapToJoi(typeDescriptor, { initial: joiSchema, mappings: this.joiMappings });
+	    return mapToJoi(typeDescriptor, {
+	      initial: joiSchema,
+	      mappings: this.joiMappings
+	    });
 	  }
 	};
 
@@ -503,7 +513,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    joiSchema = equalOption(typeDescriptor, { initial: joiSchema });
 
-	    return mapToJoi(typeDescriptor, { initial: joiSchema, mappings: this.joiMappings });
+	    return mapToJoi(typeDescriptor, {
+	      initial: joiSchema,
+	      mappings: this.joiMappings
+	    });
 	  }
 	};
 
@@ -589,7 +602,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _require = __webpack_require__(10),
 	    mapToJoi = _require.mapToJoi;
 
-	var joiMappings = [['minLength', 'min', true], ['maxLength', 'max', true], ['exactLength', 'length', true]];
+	var joiMappings = [['minLength', 'min', true], ['maxLength', 'max', true], ['exactLength', 'length', true], ['unique', 'unique']];
 
 	module.exports = function arrayValidation(typeDescriptor, itemTypeDescriptor) {
 	  var joiSchema = joi.array().items(itemTypeDescriptor.validation);
@@ -597,7 +610,10 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  joiSchema = joiSchema.sparse(canBeSparse);
 
-	  joiSchema = mapToJoi(typeDescriptor, { initial: joiSchema, mappings: joiMappings });
+	  joiSchema = mapToJoi(typeDescriptor, {
+	    initial: joiSchema,
+	    mappings: joiMappings
+	  });
 
 	  return joiSchema;
 	};
@@ -844,22 +860,28 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	module.exports = {
-	  classAsSecondParam: function classAsSecondParam(ErroneousPassedClass) {
-	    return new Error('You passed the structure class as the second parameter of attributes(). The expected usage is `attributes(schema)(' + (ErroneousPassedClass.name || 'StructureClass') + ')`.');
-	  },
-	  nonObjectAttributes: function nonObjectAttributes() {
-	    return new TypeError('#attributes can\'t be set to a non-object.');
-	  },
-	  arrayOrIterable: function arrayOrIterable() {
-	    return new TypeError('Value must be iterable or array-like.');
-	  },
-	  missingDynamicType: function missingDynamicType(attributeName) {
-	    return new Error('Missing dynamic type for attribute: ' + attributeName + '.');
-	  },
-	  invalidType: function invalidType(attributeName) {
-	    return new TypeError('Attribute type must be a constructor or the name of a dynamic type: ' + attributeName + '.');
-	  }
+	exports.classAsSecondParam = function (ErroneousPassedClass) {
+	  return new Error('You passed the structure class as the second parameter of attributes(). The expected usage is `attributes(schema)(' + (ErroneousPassedClass.name || 'StructureClass') + ')`.');
+	};
+
+	exports.nonObjectAttributes = function () {
+	  return new TypeError("#attributes can't be set to a non-object.");
+	};
+
+	exports.arrayOrIterable = function () {
+	  return new TypeError('Value must be iterable or array-like.');
+	};
+
+	exports.missingDynamicType = function (attributeName) {
+	  return new Error('Missing dynamic type for attribute: ' + attributeName + '.');
+	};
+
+	exports.invalidType = function (attributeName) {
+	  return new TypeError('Attribute type must be a constructor or the name of a dynamic type: ' + attributeName + '.');
+	};
+
+	exports.invalidAttributes = function (errors, StructureValidationError) {
+	  return new StructureValidationError(errors);
 	};
 
 /***/ }),
@@ -1147,8 +1169,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	var _require = __webpack_require__(15),
-	    SCHEMA = _require.SCHEMA;
+	var _require = __webpack_require__(9),
+	    isPlainObject = _require.isPlainObject;
+
+	var _require2 = __webpack_require__(15),
+	    SCHEMA = _require2.SCHEMA;
 
 	var getType = __webpack_require__(26);
 
@@ -1190,28 +1215,56 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function serializeAttribute(attribute, attrName, schema, toJSONOpts) {
 	  if (isArrayType(schema, attrName)) {
-	    return attribute.map(function (item) {
-	      if (item && typeof item.toJSON === 'function') {
-	        return item.toJSON(toJSONOpts);
-	      }
+	    return serializeArrayType(attribute, toJSONOpts);
+	  }
 
-	      return serialize(item);
-	    });
+	  if (isObjectType(attribute)) {
+	    return serializeObjectType(attribute, toJSONOpts);
 	  }
 
 	  if (isNestedSchema(schema, attrName)) {
-	    if (attribute == null) {
-	      return attribute;
-	    }
-
-	    return attribute.toJSON(toJSONOpts);
+	    return serializeNestedType(attribute, toJSONOpts);
 	  }
 
 	  return attribute;
 	}
 
+	function serializeArrayType(attribute, toJSONOpts) {
+	  return attribute.map(function (item) {
+	    if (item && typeof item.toJSON === 'function') {
+	      return item.toJSON(toJSONOpts);
+	    }
+
+	    return serialize(item);
+	  });
+	}
+
+	function serializeNestedType(attribute, toJSONOpts) {
+	  if (attribute == null) {
+	    return attribute;
+	  }
+
+	  return attribute.toJSON(toJSONOpts);
+	}
+
+	function serializeObjectType(attribute, toJSONOpts) {
+	  return Object.keys(attribute).reduce(function (serialized, key) {
+	    var item = attribute[key];
+
+	    serialized[key] = item && typeof item.toJSON === 'function' ? item.toJSON(toJSONOpts) : item;
+
+	    return serialized;
+	  }, {});
+	}
+
 	function isArrayType(schema, attrName) {
 	  return schema[attrName].itemType && getTypeSchema(schema[attrName].itemType);
+	}
+
+	function isObjectType(attribute) {
+	  return isPlainObject(attribute) && Object.values(attribute).some(function (value) {
+	    return value && value[SCHEMA];
+	  });
 	}
 
 	function isNestedSchema(schema, attrName) {
@@ -1222,6 +1275,64 @@ return /******/ (function(modules) { // webpackBootstrap
 
 /***/ }),
 /* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	var Errors = __webpack_require__(23);
+	var DefaultValidationError = __webpack_require__(37);
+
+	exports.buildStrictDescriptorFor = function buildStrictDescriptorFor(StructureClass, schemaOptions) {
+	  var StructureValidationError = schemaOptions.strictValidationErrorClass || DefaultValidationError;
+
+	  return {
+	    value: function buildStrict(constructorArgs) {
+	      var instance = new StructureClass(constructorArgs);
+
+	      var _instance$validate = instance.validate(),
+	          valid = _instance$validate.valid,
+	          errors = _instance$validate.errors;
+
+	      if (!valid) {
+	        throw Errors.invalidAttributes(errors, StructureValidationError);
+	      }
+
+	      return instance;
+	    }
+	  };
+	};
+
+/***/ }),
+/* 37 */
+/***/ (function(module, exports) {
+
+	'use strict';
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var DefautValidationError = function (_Error) {
+	  _inherits(DefautValidationError, _Error);
+
+	  function DefautValidationError(errors) {
+	    _classCallCheck(this, DefautValidationError);
+
+	    var _this = _possibleConstructorReturn(this, (DefautValidationError.__proto__ || Object.getPrototypeOf(DefautValidationError)).call(this, 'Invalid Attributes'));
+
+	    _this.details = errors;
+	    return _this;
+	  }
+
+	  return DefautValidationError;
+	}(Error);
+
+	module.exports = DefautValidationError;
+
+/***/ }),
+/* 38 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1276,6 +1387,36 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  return attributes;
 	}
+
+/***/ }),
+/* 39 */
+/***/ (function(module, exports) {
+
+	"use strict";
+
+	exports.buildCloneDescriptorFor = function buildCloneDescriptorFor(StructureClass) {
+	  return {
+	    configurable: true,
+	    value: function clone() {
+	      var overwrites = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	      var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+	      var strict = options.strict;
+
+
+	      var newAttributes = Object.assign({}, this.attributes, overwrites);
+
+	      var cloneInstance = void 0;
+
+	      if (strict) {
+	        cloneInstance = StructureClass.buildStrict(newAttributes);
+	      } else {
+	        cloneInstance = new StructureClass(newAttributes);
+	      }
+
+	      return cloneInstance;
+	    }
+	  };
+	};
 
 /***/ })
 /******/ ])

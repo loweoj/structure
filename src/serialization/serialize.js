@@ -19,7 +19,7 @@ function getTypeSchema(typeDescriptor) {
 function serializeStructure(structure, schema, toJSONOpts) {
   const serializedStructure = Object.create(null);
 
-  for(let attrName in schema) {
+  for (let attrName in schema) {
     let attribute = structure[attrName];
 
     if(isPresent(attribute) || isNullable(attribute, schema, attrName)) {
